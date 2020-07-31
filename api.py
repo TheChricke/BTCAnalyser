@@ -121,5 +121,3 @@ class SnP500Data(ApiFetcher):
     def fetchData(self):
         SnP500 = web.DataReader(['sp500'], 'fred', Constants.start_date, Constants.end_date)
         return SnP500
-
-# TODO pass paths and constants to init instead

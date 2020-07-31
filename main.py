@@ -1,44 +1,79 @@
+import enum
+
+import Constants
 import api
 import utilities
 import pandas as pd
 
-JSON_OUTPUT_FOLDER = "json_output"
+#config
+DONT_FETCH = []
+FETCH = []
 
-SEARCHWORDS = ["Bitcoin"]
-COMMODITY = "gold"
-#headers to get chain api working, all the headers copied from the web browser where it worked
-HEADERS_CHAIN_API = {"authority": "chain.api.btc.com",
-                                  "method": "GET",
-                                  "path": "/v3/block/1",
-                                  "scheme": "https",
-                                  "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-                                  "accept-encoding": "gzip, deflate, br",
-                                  "accept-language": "sv-SE,sv;q=0.9,en-US;q=0.8,en;q=0.7",
-                                  "cache-control": "max-age=0",
-                                  "cookie": "_ga=GA1.2.1807831528.1595711050; _gid=GA1.2.2015397938.1595711050; _globalGA=GA1.2.1867564273.1595711050; _globalGA_gid=GA1.2.969215753.1595711050; acw_tc=0bc1a14415957114995183812e5f67fdbb5327a142bc3f3ef9229cf4632ef8",
-                                  "sec-fetch-dest": "document",
-                                  "sec-fetch-mode": "navigate",
-                                  "sec-fetch-site": "none",
-                                  "sec-fetch-user": "?1",
-                                  "upgrade-insecure-requests": "1",
-                                  "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36})"}
+GOLDPRICE_OUTPUT_FILE = "/goldprice.json"
+GOOGLETRENDS_OUTPUT_FILE = "/googletrends.json"
+BLOCKREWARD_OUTPUT_FILE = "/blockreward.json"
+SNP500_OUTPUT_FILE = "/SnP500.json"
 
 
-goldpricedata = api.CommodityPriceData()
-goldprices = goldpricedata.fetchData()
-utilities.JsonConverter.exportDataFrameToJson(JSON_OUTPUT_FOLDER, "/goldprice")
+class Variables(enum.Enum):
+    GOLDPRICE = 1
+    GOOGLETRENDS = 2
+    BLOCKREWARD = 3
+    SNP500 = 4
 
-googletrendsdata = api.GoogleTrendsData()
-googletrends = googletrendsdata.fetchData()
-utilities.JsonConverter.exportDataFrameToJson(JSON_OUTPUT_FOLDER, "/googletrends")
+Run_Mode = Constants.Run_Mode
+RUN_MODE = Constants.RUN_MODE
 
-blockrewarddata = api.BlockRewardData(HEADERS_CHAIN_API)
-blockrewards = blockrewarddata.fetchData()
-utilities.JsonConverter.exportDataFrameToJson(JSON_OUTPUT_FOLDER, "/blockreward")
+gold_df = pd.DataFrame()
+google_trends_df = pd.DataFrame()
+blockreward_df = pd.DataFrame()
+s_n_p500_df = pd.DataFrame()
 
-sandp500data = api.SnP500Data()
-sandp500 = sandp500data.fetchData()
-utilities.JsonConverter.exportDataFrameToJson(JSON_OUTPUT_FOLDER, "/SnP500")
+if Run_Mode.ONE_VARIABLE in RUN_MODE:
+    if Variables.GOLDPRICE not in DONT_FETCH:
+        goldpricedata = api.CommodityPriceData()
+        gold_df = goldpricedata.fetchData()
+        utilities.JsonConverter.exportDataFrameToJson(Constants.JSON_OUTPUT_FOLDER, GOLDPRICE_OUTPUT_FILE)
+    else:
+        gold_df = utilities.JsonConverter.jsonToDataFrame(Constants.JSON_OUTPUT_FOLDER, GOLDPRICE_OUTPUT_FILE)
+
+    if Run_Mode.SHOW_DESCRIPTIVE in RUN_MODE:
+        pass
+
+    if Variables.GOOGLETRENDS not in DONT_FETCH:
+        googletrendsdata = api.GoogleTrendsData(Constants.SEARCHWORDS)
+        google_trends_df = googletrendsdata.fetchData()
+        utilities.JsonConverter.exportDataFrameToJson(Constants.JSON_OUTPUT_FOLDER, GOOGLETRENDS_OUTPUT_FILE)
+    else:
+        google_trends_df = utilities.JsonConverter.jsonToDataFrame(Constants.JSON_OUTPUT_FOLDER, GOLDPRICE_OUTPUT_FILE)
+
+    if Run_Mode.SHOW_DESCRIPTIVE in RUN_MODE:
+        pass
+
+    if Variables.BLOCKREWARD not in DONT_FETCH:
+        blockrewarddata = api.BlockRewardData(Constants.HEADERS_CHAIN_API)
+        blockreward_df = blockrewarddata.fetchData()
+        utilities.JsonConverter.exportDataFrameToJson(Constants.JSON_OUTPUT_FOLDER, BLOCKREWARD_OUTPUT_FILE)
+    else:
+        blockreward_df = utilities.JsonConverter.jsonToDataFrame(Constants.JSON_OUTPUT_FOLDER, BLOCKREWARD_OUTPUT_FILE)
+
+    if Run_Mode.SHOW_DESCRIPTIVE in RUN_MODE:
+        pass
+
+    if Variables.SNP500 not in DONT_FETCH:
+        sandp500data = api.SnP500Data()
+        s_n_p500_df = sandp500data.fetchData()
+        utilities.JsonConverter.exportDataFrameToJson(Constants.JSON_OUTPUT_FOLDER, SNP500_OUTPUT_FILE)
+    else:
+        s_n_p500_df = utilities.JsonConverter.jsonToDataFrame(Constants.JSON_OUTPUT_FOLDER, SNP500_OUTPUT_FILE)
+
+    if Run_Mode.SHOW_DESCRIPTIVE in RUN_MODE:
+        pass
+
+elif Run_Mode.RUN_REGRESSION in RUN_MODE:
+    pass
+
 
 #concatenate data frames and remove non numerical columns(date)
-data = pd.concat([goldprices, googletrends, blockrewards, sandp500], axis=1, sort=False).select_dtypes(['number'])
+data = pd.concat([gold_df, google_trends_df, blockreward_df, s_n_p500_df], axis=1, sort=False).select_dtypes(['number'])
+#TODO merge on date

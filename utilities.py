@@ -24,9 +24,13 @@ class JsonConverter:
 
     @staticmethod
     def jsonToDataFrame(folder, file_name):
-        f = open(folder + file_name, "r")
-        jsonStr = f.read()
-        f.close()
+        path = folder + file_name
+        jsonStr = ""
+        if os.path.exists(path):
+            f = open(folder + file_name, "r")
+            jsonStr = f.read()
+            f.close()
+
         return pd.read_json(jsonStr)
 
 class DescriptiveStatistics:
