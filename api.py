@@ -1,4 +1,6 @@
 import abc
+from time import sleep
+
 import pandas as pd
 import investpy
 import requests
@@ -11,12 +13,6 @@ import Constants
 
 class ApiFetcher(metaclass=abc.ABCMeta):
 
-    def __init__(self, baseUrl, path, parameters, headers):
-        self.baseurl = baseUrl
-        self.path = path
-        self.parameters = parameters
-        self.headers = headers
-
     @abc.abstractmethod
     def fetchData(self):
         pass
@@ -24,8 +20,7 @@ class ApiFetcher(metaclass=abc.ABCMeta):
 
 class CommodityPriceData(ApiFetcher):
 
-    def __init__(self, baseUrl, path, parameters, headers, commodity):
-        super().__init__(baseUrl, path, parameters, headers)
+    def __init__(self, commodity):
         self.COMMODITY = commodity
 
     # fetches historical prices for gold from Investing.com
@@ -39,8 +34,7 @@ class CommodityPriceData(ApiFetcher):
 
 class GoogleTrendsData(ApiFetcher):
 
-    def __init__(self, baseUrl, path, parameters, headers, searchwords):
-        super().__init__(baseUrl, path, parameters, headers)
+    def __init__(self, searchwords):
         self.SEARCH_WORDS = searchwords
 
     # fetches historical data for amount of google searches for a certain word
@@ -66,8 +60,9 @@ class GoogleTrendsData(ApiFetcher):
 
 class BlockRewardData(ApiFetcher):
 
-    def __init__(self, baseUrl, path, parameters, headers):
-        super().__init__(baseUrl, path, parameters, headers)
+    def __init__(self, baseUrl, path, headers):
+        self.baseUrl = baseUrl
+        self.path = path
         self.HEADERS = headers
         self.totalBTC = 0
 
@@ -81,39 +76,45 @@ class BlockRewardData(ApiFetcher):
         return blockreward*blocksPerDay*365
 
     def utcToDate(self, timestamp):
-        return datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d')
+        return datetime.utcfromtimestamp(int(timestamp))
 
     def calculateBlockHeightAtEndDate(self):
         pass
 
     def fetchData(self):
-        data = []
+        return self.buildBlockRewardDataFrame(Constants.end_date, self.calculateBlocksPerDay())
 
-        blocks_per_day = self.calculateBlocksPerDay()
+    def buildBlockRewardDataFrame(self, end_date, blocks_per_day):
+        data_array = []
 
         blockNr = 1
         while True:
-            r = requests.get(Constants.CHAIN_API_URL + "/block/" + blockNr,
-                         headers=self.HEADERS)
+            r = requests.get(self.baseUrl + self.path + str(blockNr),
+                             headers=self.HEADERS)
             response = r.json()
-            error_no = response["error_no"]
-            if error_no == 1: #we have reached the end of the blockchain
+            print(response)
+            if response["err_code"] != 0:
+                print(self.baseUrl + self.path + str(blockNr))
+                print(response["message"])
                 break
-            blockNr = blockNr + blocks_per_day
-            block_reward = response["data"]["reward_block"]
+            data = response['data']
+            timestamp = data['timestamp']
+            date = self.utcToDate(timestamp)
+            if date > end_date:  # we have reached passed the end date
+                break
+            blockNr = int(blockNr + blocks_per_day)
+            block_reward = data["reward_block"]/100000000
+            print(block_reward)
+            self.totalBTC = self.totalBTC + block_reward*blocks_per_day
             S2F = self.totalBTC / self.calculateNewBTCForYear(block_reward, blocks_per_day)
-            date = self.utcToDate(response["data"]["timestamp"])
-            row = [date, S2F]
-            data.append(row)
+            date_string = self.utcToDate(data["timestamp"]).strftime('%Y-%m-%d')
+            row = [date_string, S2F]
+            data_array.append(row)
 
-        return pd.DataFrame(data, columns=["date", "S2F"])
+        return pd.DataFrame(data_array, columns=["date", "S2F"])
 
 
 class SnP500Data(ApiFetcher):
-
-    def __init__(self, baseUrl, path, parameters, headers):
-        super().__init__(baseUrl, path, parameters, headers)
-        self.HEADERS = headers
 
     # Imports data from a number of online sources.
     #

@@ -4,6 +4,8 @@ import unittest
 
 import requests
 import pandas as pd
+
+import Constants
 import api
 
 class TestApi(unittest.TestCase):
@@ -25,13 +27,13 @@ class TestApi(unittest.TestCase):
 class TestBlockRewards(unittest.TestCase):
 
     def test_blocks_perday(self):
-        blockreward = api.BlockRewardData(None, None, None, None)
+        blockreward = api.BlockRewardData(None, None, None)
         blocksPerDay = blockreward.calculateBlocksPerDay()
         self.assertEqual(blocksPerDay, 144)
 
     def test_utc_to_date(self):
         timestamp = 1231469665
-        blockreward = api.BlockRewardData(None, None, None, None)
+        blockreward = api.BlockRewardData(None, None, None)
         self.assertEqual(blockreward.utcToDate(timestamp), "2009-01-09")
 
     def test_compareDateTimes(self):
@@ -44,3 +46,9 @@ class TestBlockRewards(unittest.TestCase):
         timestamp2 = 1231468665
         datetime.datetime.utcfromtimestamp(timestamp2)
         self.assertTrue(date1 > date2)
+
+    def test_buildBlockRewardDataFrame(self):
+        blockreward = api.BlockRewardData(Constants.CHAIN_API_URL, "/block/", Constants.HEADERS_CHAIN_API)
+        blocks_per_day = blockreward.calculateBlocksPerDay()
+        df = blockreward.buildBlockRewardDataFrame(datetime.datetime(2009, 2, 11), blocks_per_day)
+        print(df)
