@@ -48,7 +48,19 @@ class TestBlockRewards(unittest.TestCase):
         self.assertTrue(date1 > date2)
 
     def test_buildBlockRewardDataFrame(self):
+        # blockreward = api.BlockRewardData(Constants.CHAIN_API_URL, "/block/", Constants.HEADERS_CHAIN_API)
+        # blocks_per_day = blockreward.calculateBlocksPerDay()
+        # df = blockreward.buildBlockRewardDataFrame(datetime.datetime(2009, 1, 20), blocks_per_day)
+        btc_in_ciruclation_2020 = 18522175
+        new_coins_per_year = 144*6.5*365
+        expectedS2F = btc_in_ciruclation_2020/new_coins_per_year
+
         blockreward = api.BlockRewardData(Constants.CHAIN_API_URL, "/block/", Constants.HEADERS_CHAIN_API)
-        blocks_per_day = blockreward.calculateBlocksPerDay()
-        df = blockreward.buildBlockRewardDataFrame(datetime.datetime(2009, 2, 11), blocks_per_day)
-        print(df)
+        block = blockreward.fetchBlock(641774)
+        reward = blockreward.getBlockReward(block)
+
+        actual_newbtc_per_year = blockreward.calculateNewBTCForYear(reward, 144)
+        expected_new_btc_per_year = 328500
+        self.assertEqual(expected_new_btc_per_year, actual_newbtc_per_year)
+        actualS2F = blockreward.calcualteS2F(btc_in_ciruclation_2020, reward, 144)
+        self.assertAlmostEqual(expectedS2F, actualS2F)

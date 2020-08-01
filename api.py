@@ -78,9 +78,6 @@ class BlockRewardData(ApiFetcher):
     def utcToDate(self, timestamp):
         return datetime.utcfromtimestamp(int(timestamp))
 
-    def calculateBlockHeightAtEndDate(self):
-        pass
-
     def fetchData(self):
         return self.buildBlockRewardDataFrame(Constants.end_date, self.calculateBlocksPerDay())
 
@@ -89,30 +86,36 @@ class BlockRewardData(ApiFetcher):
 
         blockNr = 1
         while True:
-            r = requests.get(self.baseUrl + self.path + str(blockNr),
-                             headers=self.HEADERS)
-            response = r.json()
-            print(response)
-            if response["err_code"] != 0:
-                print(self.baseUrl + self.path + str(blockNr))
-                print(response["message"])
-                break
+            response = self.fetchBlock(blockNr)
             data = response['data']
             timestamp = data['timestamp']
             date = self.utcToDate(timestamp)
             if date > end_date:  # we have reached passed the end date
                 break
             blockNr = int(blockNr + blocks_per_day)
-            block_reward = data["reward_block"]/100000000
-            print(block_reward)
+            block_reward = self.getBlockReward(response)
             self.totalBTC = self.totalBTC + block_reward*blocks_per_day
-            S2F = self.totalBTC / self.calculateNewBTCForYear(block_reward, blocks_per_day)
+            S2F = self.calcualteS2F(self.totalBTC, block_reward, blocks_per_day)
             date_string = self.utcToDate(data["timestamp"]).strftime('%Y-%m-%d')
             row = [date_string, S2F]
             data_array.append(row)
 
         return pd.DataFrame(data_array, columns=["date", "S2F"])
 
+    def fetchBlock(self, block_height):
+        r = requests.get(self.baseUrl + self.path + str(block_height),
+                         headers=self.HEADERS)
+        response = r.json()
+        if response["err_code"] != 0:
+            raise Exception("Error fetching data from chain api: " + response["message"]
+                            + " url: " + self.baseUrl + self.path + str(block_height))
+        return r.json()
+
+    def calcualteS2F(self, totalbtc, block_reward, blocks_per_day):
+        return totalbtc / self.calculateNewBTCForYear(block_reward, blocks_per_day)
+
+    def getBlockReward(self, response):
+        return response['data']["reward_block"] / 100000000
 
 class SnP500Data(ApiFetcher):
 
