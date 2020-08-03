@@ -104,5 +104,3 @@ class TestDataReaderLibrary(unittest.TestCase):
     def test_data_to_json(self):
         data = self.test_fetchData()
         utilities.JsonConverter.exportDataFrameToJson(data, Constants.TEST_JSON_OUPUT_FOLDER, "/testSnP500ToJson.json")
-
-#TODO: make pandas not output date to timestamp

@@ -18,6 +18,7 @@ class JsonConverter:
     @staticmethod
     def exportDataFrameToJson(df, folder, file_name):
         JsonConverter.createFolder(folder)
+        df["Date"] = df['Date'].astype(str)
         json = df.to_json()
         print("Writing to path " + folder + file_name)
         f = open(folder + file_name, "w+")
