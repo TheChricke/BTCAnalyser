@@ -1,5 +1,7 @@
 import json
 import os
+from functools import reduce
+
 import matplotlib.pyplot as plt
 from pandas.plotting import scatter_matrix
 import numpy as np
@@ -64,3 +66,9 @@ class DescriptiveStatistics:
     def summaryDescriptiveStatistics(df):
         result = df.describe(include=[np.number])
         return result
+
+class DataFrameOperations:
+
+    @staticmethod
+    def merge_dataframes(df_array):
+        return reduce(lambda left, right: pd.merge(left, right, on=['Date']), df_array)

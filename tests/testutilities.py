@@ -1,9 +1,42 @@
 import math
+from functools import reduce
 
 import pandas as pd
 import unittest
 
+import Constants
 import utilities
+
+class DataFrameHelper(unittest.TestCase):
+
+    def __init__(self):
+        self.df1 = None
+        self.df2 = None
+        self.df3 = None
+        self.createTestFrame()
+
+    def createTestFrame(self):
+        data1 = {'Date': ["2020-01-01", "2020-01-02", "2020-01-03"],
+                'goldPrice': [300, 350, 230]
+                }
+        df1 = pd.DataFrame(data1, columns=['Date', 'goldPrice'])
+
+        data2 = {'Date': ["2020-01-01", "2020-01-02", "2020-01-03"],
+                'btcPrice': [8000, 4000, 3000]
+                }
+        df2 = pd.DataFrame(data2, columns=['Date', 'btcPrice'])
+
+        data3 = {'Date': ["2020-01-01", "2020-01-02", "2020-01-03"],
+                'googleSearches': [23, 56, 23],
+                 'transactions': [1500, 400, 456]
+                }
+        df3 = pd.DataFrame(data3, columns=['Date', 'googleSearches', 'transactions'])
+        self.df1 = df1
+        self.df2 = df2
+        self.df3 = df3
+
+    def getDataFrame_array(self):
+        return [self.df1, self.df2, self.df3]
 
 class TestPandas(unittest.TestCase):
 
@@ -22,16 +55,30 @@ class TestPandas(unittest.TestCase):
         self.assertEqual(df.columns[0], "value1")
         self.assertEqual(df.columns[1], "value2")
 
+    def test_init_and_append_dataframe(self):
+        data = []
+        data.append(["2020-01-01", 35])
+        data.append(["2020-01-02", 35])
+        df = pd.DataFrame(data, columns=["date", "value"])
+        print(df)
+
+    def test_merge_dataframes(self):
+        testhelper = DataFrameHelper()
+        data_array = testhelper.getDataFrame_array()
+        df_merged = utilities.DataFrameOperations.merge_dataframes(data_array)
+        expected_columns = ["Date", "goldPrice", "btcPrice", "googleSearches", "transactions"]
+        self.assertEqual(len(expected_columns), len(df_merged.columns))
+
 class TestJsonExporter(unittest.TestCase):
 
     def test_pandastojson(self):
         df = TestHelper.createTestDataFrame()
-        folder = "tests"
+        folder = Constants.TEST_JSON_OUPUT_FOLDER
         filename = "/testJson.json"
         utilities.JsonConverter.exportDataFrameToJson(df, folder, filename)
 
     def test_jsontopandas(self):
-        folder = "tests"
+        folder = Constants.TEST_JSON_OUPUT_FOLDER
         filename = "/testJson.json"
         df = utilities.JsonConverter.jsonToDataFrame(folder, filename)
         self.assertTrue(isinstance(df, pd.DataFrame))

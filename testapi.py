@@ -1,5 +1,4 @@
 import datetime
-import json
 import unittest
 
 import requests
@@ -7,6 +6,7 @@ import pandas as pd
 
 import Constants
 import api
+import utilities
 
 class TestApi(unittest.TestCase):
 
@@ -16,13 +16,6 @@ class TestApi(unittest.TestCase):
         response = r.json()
         value = response["id"]
         print(value)
-
-    def test_init_and_append_dataframe(self):
-        data = []
-        data.append(["2020-01-01", 35])
-        data.append(["2020-01-02", 35])
-        df = pd.DataFrame(data, columns=["date", "value"])
-        print(df)
 
 class TestBlockRewards(unittest.TestCase):
 
@@ -48,6 +41,8 @@ class TestBlockRewards(unittest.TestCase):
         self.assertTrue(date1 > date2)
 
     def test_buildBlockRewardDataFrame(self):
+        data_array = []
+
         # blockreward = api.BlockRewardData(Constants.CHAIN_API_URL, "/block/", Constants.HEADERS_CHAIN_API)
         # blocks_per_day = blockreward.calculateBlocksPerDay()
         # df = blockreward.buildBlockRewardDataFrame(datetime.datetime(2009, 1, 20), blocks_per_day)
@@ -63,4 +58,51 @@ class TestBlockRewards(unittest.TestCase):
         expected_new_btc_per_year = 328500
         self.assertEqual(expected_new_btc_per_year, actual_newbtc_per_year)
         actualS2F = blockreward.calcualteS2F(btc_in_ciruclation_2020, reward, 144)
-        self.assertAlmostEqual(expectedS2F, actualS2F)
+        #self.assertAlmostEqual(expectedS2F, actualS2F)
+
+        row = blockreward.buildRowData(block, actualS2F)
+        data_array.append(row)
+        data = pd.DataFrame(data_array, columns=["Date", "S2F"])
+        utilities.JsonConverter.exportDataFrameToJson(data, Constants.TEST_JSON_OUPUT_FOLDER,
+                                                      "/testBlockrewardToJson.json")
+
+class TestBitcoinPriceData(unittest.TestCase):
+
+    def test_fetchData(self):
+        start_date = datetime.datetime(2020, 6, 1)
+        end_date = datetime.datetime(2020, 6, 3)
+        crypto_price_date = api.CryptoPriceData(start_date, end_date, "bitcoin")
+        data = crypto_price_date.fetchData()
+        data = data.reset_index()
+        data = data[["Date", "Close"]]
+        return data
+
+    def test_data_to_json(self):
+        data = self.test_fetchData()
+        utilities.JsonConverter.exportDataFrameToJson(data, Constants.TEST_JSON_OUPUT_FOLDER, "/testBitcoinPriceToJson.json")
+
+class TestCommodityPriceData(unittest.TestCase):
+    def test_fetchData(self):
+        start_date = datetime.datetime(2020, 6, 1)
+        end_date = datetime.datetime(2020, 6, 3)
+        gold_price_data = api.CommodityPriceData("gold", start_date, end_date)
+        data = gold_price_data.fetchData()
+        return data
+
+    def test_data_to_json(self):
+        data = self.test_fetchData()
+        utilities.JsonConverter.exportDataFrameToJson(data, Constants.TEST_JSON_OUPUT_FOLDER, "/testGoldpriceToJson.json")
+
+class TestDataReaderLibrary(unittest.TestCase):
+    def test_fetchData(self):
+        start_date = datetime.datetime(2020, 6, 1)
+        end_date = datetime.datetime(2020, 6, 3)
+        SnP500data = api.SnP500Data(start_date, end_date)
+        data = SnP500data.fetchData()
+        return data
+
+    def test_data_to_json(self):
+        data = self.test_fetchData()
+        utilities.JsonConverter.exportDataFrameToJson(data, Constants.TEST_JSON_OUPUT_FOLDER, "/testSnP500ToJson.json")
+
+#TODO: make pandas not output date to timestamp

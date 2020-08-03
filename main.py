@@ -31,21 +31,11 @@ s_n_p500_df = pd.DataFrame()
 
 if Run_Mode.ONE_VARIABLE in RUN_MODE:
     if Variables.GOLDPRICE not in DONT_FETCH:
-        goldpricedata = api.CommodityPriceData()
+        goldpricedata = api.CommodityPriceData("gold", Constants.start_date, Constants.end_date)
         gold_df = goldpricedata.fetchData()
         utilities.JsonConverter.exportDataFrameToJson(gold_df, Constants.JSON_OUTPUT_FOLDER, GOLDPRICE_OUTPUT_FILE)
     else:
         gold_df = utilities.JsonConverter.jsonToDataFrame(Constants.JSON_OUTPUT_FOLDER, GOLDPRICE_OUTPUT_FILE)
-
-    if Run_Mode.SHOW_DESCRIPTIVE in RUN_MODE:
-        pass
-
-    if Variables.GOOGLETRENDS not in DONT_FETCH:
-        googletrendsdata = api.GoogleTrendsData(Constants.SEARCHWORDS)
-        google_trends_df = googletrendsdata.fetchData()
-        utilities.JsonConverter.exportDataFrameToJson(google_trends_df, Constants.JSON_OUTPUT_FOLDER, GOOGLETRENDS_OUTPUT_FILE)
-    else:
-        google_trends_df = utilities.JsonConverter.jsonToDataFrame(Constants.JSON_OUTPUT_FOLDER, GOLDPRICE_OUTPUT_FILE)
 
     if Run_Mode.SHOW_DESCRIPTIVE in RUN_MODE:
         pass
@@ -61,7 +51,7 @@ if Run_Mode.ONE_VARIABLE in RUN_MODE:
         pass
 
     if Variables.SNP500 not in DONT_FETCH:
-        sandp500data = api.SnP500Data()
+        sandp500data = api.SnP500Data(Constants.start_date, Constants.end_date)
         s_n_p500_df = sandp500data.fetchData()
         utilities.JsonConverter.exportDataFrameToJson(s_n_p500_df, Constants.JSON_OUTPUT_FOLDER, SNP500_OUTPUT_FILE)
     else:

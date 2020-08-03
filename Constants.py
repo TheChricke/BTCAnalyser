@@ -27,6 +27,7 @@ start_date = datetime.datetime(int(START_DATE_YEAR), int(START_DATE_MONTH), int(
 end_date = datetime.datetime(int(END_DATE_YEAR), int(END_DATE_MONTH), int(END_DATE_DAY))
 
 JSON_OUTPUT_FOLDER = "json_output"
+TEST_JSON_OUPUT_FOLDER = "tests/tests"
 SEARCHWORDS = ["Bitcoin"]
 COMMODITY = "gold"
 #headers to get chain api working, all the headers copied from the web browser where it worked

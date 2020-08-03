@@ -20,36 +20,41 @@ class ApiFetcher(metaclass=abc.ABCMeta):
 
 class CommodityPriceData(ApiFetcher):
 
-    def __init__(self, commodity):
+    def __init__(self, commodity, start_date, end_date):
         self.COMMODITY = commodity
+        self.start_date = start_date
+        self.end_date = end_date
 
     # fetches historical prices for gold from Investing.com
     # returns a pandas dataframe
     def fetchData(self):
         df = investpy.get_commodity_historical_data(commodity=self.COMMODITY,
-                                                    from_date=Constants.start_date.strftime("%D/%M/%Y"),
-                                                    to_date=Constants.end_date.strftime("%D/%M/%Y"))
+                                                    from_date=self.start_date.strftime("%d/%m/%Y"),
+                                                    to_date=self.end_date.strftime("%d/%m/%Y"))
+        df = df.reset_index()
+        df = df[["Date", "Close"]]
         return df
 
 
 class GoogleTrendsData(ApiFetcher):
 
-    def __init__(self, searchwords):
+    def __init__(self, searchwords, start_date, end_date):
         self.SEARCH_WORDS = searchwords
+        self.start_date = start_date
+        self.end_date = end_date
 
     # fetches historical data for amount of google searches for a certain word
     def fetchData(self):
-        pytrend = TrendReq(hl='en-GB', tz=360)
+        pytrend = TrendReq(hl='en-GB', tz=360, timeout=(10,25), proxies=['https://34.203.233.13:80',], retries=2, backoff_factor=0.1)
         dataset = []
-        start_date_str = Constants.start_date.strftime("%Y-%M-%D")
-        end_date_str = Constants.end_date.strftime("%Y-%M-%D")
+        start_date_str = self.start_date.strftime("%Y-%M-%D")
+        end_date_str = self.end_date.strftime("%Y-%M-%D")
         for x in range(0, len(self.SEARCH_WORDS)):
             keywords = [self.SEARCH_WORDS[x]]
             pytrend.build_payload(
                 kw_list=keywords,
                 cat=0,
-                timeframe=start_date_str + ' ' + end_date_str,
-                geo='GB')
+                timeframe=start_date_str + ' ' + end_date_str)
             data = pytrend.interest_over_time()
             if not data.empty:
                 data = data.drop(labels=['isPartial'], axis='columns')
@@ -96,11 +101,14 @@ class BlockRewardData(ApiFetcher):
             block_reward = self.getBlockReward(response)
             self.totalBTC = self.totalBTC + block_reward*blocks_per_day
             S2F = self.calcualteS2F(self.totalBTC, block_reward, blocks_per_day)
-            date_string = self.utcToDate(data["timestamp"]).strftime('%Y-%m-%d')
-            row = [date_string, S2F]
+            row = self.buildRowData(response, S2F)
             data_array.append(row)
 
-        return pd.DataFrame(data_array, columns=["date", "S2F"])
+        return pd.DataFrame(data_array, columns=["Date", "S2F"])
+
+    def buildRowData(self, response, S2F):
+        date_string = self.utcToDate(response["data"]["timestamp"]).strftime('%Y-%m-%d')
+        return [date_string, S2F]
 
     def fetchBlock(self, block_height):
         r = requests.get(self.baseUrl + self.path + str(block_height),
@@ -119,9 +127,29 @@ class BlockRewardData(ApiFetcher):
 
 class SnP500Data(ApiFetcher):
 
+    def __init__(self, start_date, end_date):
+        self.start_date = start_date
+        self.end_date = end_date
+
     # Imports data from a number of online sources.
     #
     # Currently supports Google Finance, St.Louis FED(FRED), and Kenneth French 's data library, among others.
     def fetchData(self):
-        SnP500 = web.DataReader(['sp500'], 'fred', Constants.start_date, Constants.end_date)
-        return SnP500
+        df = web.DataReader(['sp500'], 'fred', self.start_date, self.end_date)
+        df = df.reset_index()
+        df = df[["DATE", "sp500"]]
+        df = df.rename(columns={"DATE": "Date", "sp500": "sp500"})
+        return df
+
+class CryptoPriceData(ApiFetcher):
+
+    def __init__(self, start_date, end_date, crypto):
+        self.start_date = start_date
+        self.end_date = end_date
+        self.crypto = crypto
+
+    def fetchData(self):
+        df = investpy.get_crypto_historical_data(self.crypto,
+                                                    from_date=self.start_date.strftime("%d/%m/%Y"),
+                                                    to_date=self.end_date.strftime("%d/%m/%Y"))
+        return df
