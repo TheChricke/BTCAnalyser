@@ -62,6 +62,14 @@ class TestPandas(unittest.TestCase):
         df = pd.DataFrame(data, columns=["date", "value"])
         print(df)
 
+class TestDataFrameOperations(unittest.TestCase):
+
+    def test_first_difference_of_timeseries(self):
+        df = TestHelper.createTestDataFrame()
+        df_first_diff = utilities.DataFrameOperations.first_difference_of_timeseries(df)
+        self.assertEqual(df_first_diff.iloc[1]['value1'], 1)
+        self.assertEqual(df_first_diff.iloc[1]['value2'], 33)
+
     def test_merge_dataframes(self):
         testhelper = DataFrameHelper()
         data_array = testhelper.getDataFrame_array()

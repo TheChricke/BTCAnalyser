@@ -73,3 +73,7 @@ class DataFrameOperations:
     @staticmethod
     def merge_dataframes(df_array):
         return reduce(lambda left, right: pd.merge(left, right, on=['Date']), df_array)
+
+    @staticmethod
+    def first_difference_of_timeseries(df):
+        return df.diff()

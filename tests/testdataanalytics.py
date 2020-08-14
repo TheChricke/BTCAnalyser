@@ -24,7 +24,7 @@ class TestDataCleaning(unittest.TestCase):
         df = utilities.DataFrameOperations.merge_dataframes([
             self.read_csv_file(Constants.TEST_DATA_FOLDER, "/BTC-USD.csv")[["Date", "Close"]],
             self.read_csv_file(Constants.TEST_DATA_FOLDER, "/Gold.csv")[["Date", "Close"]],
-            self.read_csv_file(Constants.TEST_DATA_FOLDER, "/GSPC.csv")[["Date", "Close"]]])
+            self.read_csv_file(Constants.TEST_DATA_FOLDER, "/SnP.csv")[["Date", "Close"]]])
         print(df.info())
         return df[["Close_x", "Close_y", "Close"]]
 
@@ -38,5 +38,13 @@ class TestDataCleaning(unittest.TestCase):
         df = self.create_test_DF()
         print(df.info())
         dataanalytics.Analytics.checkForRandomData(dataanalytics.DataCleaning.remove_empty_rows(df))
+
+    #stationarity check
+    def test_augmented_dickey_fuller_statistics(self):
+        df = self.create_test_DF()
+        col1 = dataanalytics.DataCleaning.remove_empty_rows(df[["Close_x"]])
+        dataanalytics.Analytics.augmented_dickey_fuller_statistics(col1)
+
+
 
 
