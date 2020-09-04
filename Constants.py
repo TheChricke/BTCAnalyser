@@ -7,7 +7,7 @@ class Run_Mode(enum.Enum):
    SHOW_DESCRIPTIVE = 2
    RUN_REGRESSION = 3
 
-RUN_MODE = [Run_Mode.ONE_VARIABLE, Run_Mode.SHOW_DESCRIPTIVE]
+RUN_MODE = [Run_Mode.ONE_VARIABLE]
 
 BLOCKCYPHER_BASE_URL = "https://api.blockcypher.com/v1/btc/main"
 BLOCKCHAIN_INFO_BASE_URL = "https://blockchain.info"
@@ -33,15 +33,12 @@ TEST_DATA_FOLDER= "testData"
 SEARCHWORDS = ["Bitcoin"]
 COMMODITY = "gold"
 #headers to get chain api working, all the headers copied from the web browser where it worked
-HEADERS_CHAIN_API = {"authority": "chain.api.btc.com",
-                                  "method": "GET",
-                                  "path": "/v3/block/1",
-                                  "scheme": "https",
+HEADERS_CHAIN_API = {
                                   "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
                                   "accept-encoding": "gzip, deflate, br",
                                   "accept-language": "sv-SE,sv;q=0.9,en-US;q=0.8,en;q=0.7",
                                   "cache-control": "max-age=0",
-                                  "cookie": "_ga=GA1.2.1807831528.1595711050; _gid=GA1.2.2015397938.1595711050; _globalGA=GA1.2.1867564273.1595711050; _globalGA_gid=GA1.2.969215753.1595711050; acw_tc=0bc1a14415957114995183812e5f67fdbb5327a142bc3f3ef9229cf4632ef8",
+                                  "cookie": "_ga=GA1.2.1807831528.1595711050; _globalGA=GA1.2.1867564273.1595711050; acw_tc=0bc1a18715976927608354741e6b66b5c3f631fadff5718df87c3170a135af",
                                   "sec-fetch-dest": "document",
                                   "sec-fetch-mode": "navigate",
                                   "sec-fetch-site": "none",

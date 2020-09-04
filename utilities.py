@@ -71,9 +71,16 @@ class DescriptiveStatistics:
 class DataFrameOperations:
 
     @staticmethod
-    def merge_dataframes(df_array):
-        return reduce(lambda left, right: pd.merge(left, right, on=['Date']), df_array)
+    def merge_dataframes(df_array, onValue):
+        return reduce(lambda left, right: pd.merge(left, right, on=[onValue]), df_array)
 
     @staticmethod
     def first_difference_of_timeseries(df):
         return df.diff()
+
+    @staticmethod
+    def convertDailyDataToMonthlyData(df):
+        df.set_index('Date', inplace=True)
+        df.index = pd.to_datetime(df.index)
+        df = df.resample('1M').mean()
+        return df

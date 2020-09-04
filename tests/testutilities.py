@@ -128,6 +128,13 @@ class TestDescriptiveStatistics(unittest.TestCase):
 
         utilities.DescriptiveStatistics.summaryDescriptiveStatistics(df)
 
+class TestDataFrameOperations(unittest.TestCase):
+
+    def test_convertDailyDataToMonthlyData(self):
+        df = TestHelper.createDataFrameWithDates()
+        df = utilities.DataFrameOperations.convertDailyDataToMonthlyData(df)
+        print(df)
+
 class TestHelper:
 
     @staticmethod
@@ -148,10 +155,10 @@ class TestHelper:
 
     @staticmethod
     def createDataFrameWithDates():
-        data = {'date': ["2020-01-01", "2020-01-02", "2020-01-03"],
+        data = {'Date': ["2020-01-01", "2020-01-02", "2020-01-03"],
                 'value1': [21, 22, 23],
                 'value2': [23, 56, 23]
                 }
-        df = pd.DataFrame(data, columns=['date', 'value1', 'value2'])
+        df = pd.DataFrame(data, columns=['Date', 'value1', 'value2'])
         return df
 

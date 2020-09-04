@@ -95,6 +95,7 @@ class BlockRewardData(ApiFetcher):
             data = response['data']
             timestamp = data['timestamp']
             date = self.utcToDate(timestamp)
+            print(date)
             if date > end_date:  # we have reached passed the end date
                 break
             blockNr = int(blockNr + blocks_per_day)
@@ -103,6 +104,7 @@ class BlockRewardData(ApiFetcher):
             S2F = self.calcualteS2F(self.totalBTC, block_reward, blocks_per_day)
             row = self.buildRowData(response, S2F)
             data_array.append(row)
+            print(len(data_array))
 
         return pd.DataFrame(data_array, columns=["Date", "S2F"])
 
@@ -111,9 +113,12 @@ class BlockRewardData(ApiFetcher):
         return [date_string, S2F]
 
     def fetchBlock(self, block_height):
-        r = requests.get(self.baseUrl + self.path + str(block_height),
+        url = self.baseUrl + self.path + str(block_height)
+        print(url)
+        r = requests.get(url,
                          headers=self.HEADERS)
         response = r.json()
+        print("Block Reward status code: " + response["status"])
         if response["err_code"] != 0:
             raise Exception("Error fetching data from chain api: " + response["message"]
                             + " url: " + self.baseUrl + self.path + str(block_height))
